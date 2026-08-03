@@ -1,4 +1,4 @@
--- PART 1: SYSTEM INITIALIZATION, AUTO-SAVE DATA & HORIZONTAL GUI CONTAINER
+-- PART 1: INITIALIZATION, AUTO-SAVE CONFIG & ANTI-AFK SYSTEM
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -9,11 +9,9 @@ local Player = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- File cấu hình lưu trên thiết bị
 local CONFIG_FILE = "V9_Menu_Config.json"
 local HttpService = game:GetService("HttpService")
 
--- Giá trị mặc định của hệ thống
 local config = {
     speedEnabled = false,
     jumpEnabled = false,
@@ -26,16 +24,13 @@ local config = {
     speedValue = 80,
     jumpHeightValue = 150,
     flySpeedValue = 50,
-    menuTextureId = "rbxassetid://0", -- Mặc định không có ảnh nền
+    menuTextureId = "rbxassetid://0",
     shiftLockUIVisible = false
 }
 
--- HÀM TỰ ĐỘNG LƯU VÀ TẢI CẤU HÌNH (Yêu cầu executor hỗ trợ readfile/writefile)
 local function saveConfig()
     pcall(function()
-        if writefile then
-            writefile(CONFIG_FILE, HttpService:JSONEncode(config))
-        end
+        if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(config)) end
     end)
 end
 
@@ -43,21 +38,27 @@ local function loadConfig()
     pcall(function()
         if isfile and readfile and isfile(CONFIG_FILE) then
             local saved = HttpService:JSONDecode(readfile(CONFIG_FILE))
-            for k, v in pairs(saved) do
-                config[k] = v
-            end
+            for k, v in pairs(saved) do config[k] = v end
         end
     end)
 end
-loadConfig() -- Tải dữ liệu đã lưu ngay khi chạy script
+loadConfig()
 
--- KHỞI TẠO SCREEN GUI
+-- KÍCH HOẠT ANTI-AFK CHẠY NGẦM
+pcall(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    Player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new(0,0))
+        print("Anti-AFK Active!")
+    end)
+end)
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HorizontalUltimateMenuV9"
+ScreenGui.Name = "HorizontalAntiAfkMenuV9"
 ScreenGui.ResetOnSpawn = false
 if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = PlayerGui end
 
--- NÚT TRÒN MENU GHIM GÓC MÀN HÌNH
 local ToggleMenuButton = Instance.new("TextButton")
 ToggleMenuButton.Size = UDim2.new(0, 50, 0, 50)
 ToggleMenuButton.Position = UDim2.new(0.02, 0, 0.15, 0)
@@ -73,30 +74,25 @@ local UICornerBtn = Instance.new("UICorner")
 UICornerBtn.CornerRadius = UDim.new(0, 25)
 UICornerBtn.Parent = ToggleMenuButton
 
--- KHUNG MENU HÌNH CHỮ NHẬT NẰM NGANG (Không lo tràn màn hình đứng)
 local MainFrame = Instance.new("ImageLabel")
-MainFrame.Size = UDim2.new(0, 540, 0, 260) -- Thiết kế ngang chuẩn cho Mobile
+MainFrame.Size = UDim2.new(0, 540, 0, 260)
 MainFrame.Position = UDim2.new(0.5, -270, 0.4, -130)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
 MainFrame.ScaleType = Enum.ScaleType.Slice
 MainFrame.Parent = ScreenGui
 
--- Cập nhật ảnh nền Menu từ cấu hình đã lưu
-if config.menuTextureId ~= "rbxassetid://0" then
-    MainFrame.Image = config.menuTextureId
-end
+if config.menuTextureId ~= "rbxassetid://0" then MainFrame.Image = config.menuTextureId end
 
 local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
--- Tiêu đề Menu ở chính giữa trên cùng
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Title.BackgroundTransparency = 0.2
-Title.Text = "HORIZONTAL MULTI-HACK MENU V9"
+Title.Text = "MULTI-HACK MENU V9 + ANTI AFK ACTIVE"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 14
@@ -106,7 +102,6 @@ local UICornerTitle = Instance.new("UICorner")
 UICornerTitle.CornerRadius = UDim.new(0, 10)
 UICornerTitle.Parent = Title
 
--- Chia khung thành 2 bên cột Trái và cột Phải
 local LeftColumn = Instance.new("Frame")
 LeftColumn.Size = UDim2.new(0.46, 0, 0.8, 0)
 LeftColumn.Position = UDim2.new(0.02, 0, 0.16, 0)
@@ -118,7 +113,7 @@ RightColumn.Size = UDim2.new(0.46, 0, 0.8, 0)
 RightColumn.Position = UDim2.new(0.52, 0, 0.16, 0)
 RightColumn.BackgroundTransparency = 1
 RightColumn.Parent = MainFrame
--- PART 2: CREATE HORIZONTAL LAYOUT BUTTONS & VALUE INPUTS (LEFT & RIGHT COLUMNS)
+-- PART 2: CREATE HORIZONTAL LAYOUT AND BUTTONS DEFINITIONS
 local function createMenuButton(text, parent, sizeY, posY, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.65, 0, 0, sizeY)
@@ -153,7 +148,6 @@ local function createMenuTextBox(placeholder, parent, sizeY, posY)
     return box
 end
 
--- === CÁC NÚT BÊN CỘT TRÁI (LEFT COLUMN) ===
 local SpeedBtn = createMenuButton("Chạy Nhanh: TẮT", LeftColumn, 32, 5, Color3.fromRGB(200, 50, 50))
 local SpeedBox = createMenuTextBox("Số: 80", LeftColumn, 32, 5)
 
@@ -169,14 +163,12 @@ NoclipBtn.Size = UDim2.new(1, 0, 0, 32)
 local FlingBtn = createMenuButton("Fling (Đẩy người): TẮT", LeftColumn, 32, 165, Color3.fromRGB(200, 50, 50))
 FlingBtn.Size = UDim2.new(1, 0, 0, 32)
 
--- === CÁC NÚT BÊN CỘT PHẢI (RIGHT COLUMN) ===
 local EspBtn = createMenuButton("ESP (Nhìn xuyên): TẮT", RightColumn, 32, 5, Color3.fromRGB(200, 50, 50))
 EspBtn.Size = UDim2.new(1, 0, 0, 32)
 
 local AimBtn = createMenuButton("Aimbot (Tự ngắm): TẮT", RightColumn, 32, 45, Color3.fromRGB(200, 50, 50))
 AimBtn.Size = UDim2.new(1, 0, 0, 32)
 
--- Khu vực Dịch chuyển (Teleport)
 local TpBox = createMenuTextBox("Nhập tên...", RightColumn, 32, 85)
 TpBox.Size = UDim2.new(0.5, 0, 0, 32)
 TpBox.Position = UDim2.new(0, 0, 0, 85)
@@ -185,11 +177,9 @@ local TpBtn = createMenuButton("Dịch Chuyển", RightColumn, 32, 85, Color3.fr
 TpBtn.Size = UDim2.new(0.45, 0, 0, 32)
 TpBtn.Position = UDim2.new(0.55, 0, 0, 85)
 
--- Nút hiển thị Shift Lock rời
 local ToggleShiftLockUIVisibleBtn = createMenuButton("Nút Shift Lock: TẮT", RightColumn, 32, 125, Color3.fromRGB(200, 50, 50))
 ToggleShiftLockUIVisibleBtn.Size = UDim2.new(1, 0, 0, 32)
 
--- Khu vực Đổi Ảnh Nền (Texture Image UID)
 local TextureBox = createMenuTextBox("Nhập ID ảnh...", RightColumn, 32, 165)
 TextureBox.Size = UDim2.new(0.5, 0, 0, 32)
 TextureBox.Position = UDim2.new(0, 0, 0, 165)
@@ -198,7 +188,6 @@ local TextureBtn = createMenuButton("Đổi Nền", RightColumn, 32, 165, Color3
 TextureBtn.Size = UDim2.new(0.45, 0, 0, 32)
 TextureBtn.Position = UDim2.new(0.55, 0, 0, 165)
 
--- NÚT SHIFTLOCK RỜI TRÊN MÀN HÌNH (Ghim gần nút nhảy của game)
 local MobileShiftLockBtn = Instance.new("TextButton")
 MobileShiftLockBtn.Size = UDim2.new(0, 50, 0, 50)
 MobileShiftLockBtn.Position = UDim2.new(0.75, 0, 0.62, 0) 
@@ -213,7 +202,7 @@ MobileShiftLockBtn.Parent = ScreenGui
 local UICornerSL = Instance.new("UICorner")
 UICornerSL.CornerRadius = UDim.new(0, 25)
 UICornerSL.Parent = MobileShiftLockBtn
--- PART 3: FEATURE LOGIC & PHYSICAL BYPASS
+-- PART 3: BYPASS PHYSICS & RE-CALCULATED MOBILE FLY DIRECTION
 local function updateBypassPhysics()
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass("Humanoid") then
         local root = Player.Character.HumanoidRootPart
@@ -250,23 +239,32 @@ local function setFlying(state)
         local rootPart = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
         local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
         if not rootPart or not humanoid then return end
+        
         flyBodyVelocity = Instance.new("BodyVelocity")
         flyBodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
         flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
         flyBodyVelocity.Parent = rootPart
+        
         flyBodyGyro = Instance.new("BodyGyro")
         flyBodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
         flyBodyGyro.CFrame = rootPart.CFrame
         flyBodyGyro.Parent = rootPart
+        
         humanoid.PlatformStand = true
+        
         flyConnection = RunService.RenderStepped:Connect(function()
             if Player.Character and rootPart and Workspace.CurrentCamera then
                 local camera = Workspace.CurrentCamera
                 local moveDirection = humanoid.MoveDirection
+                
                 if moveDirection.Magnitude > 0 then
-                    flyBodyVelocity.Velocity = camera.CFrame:VectorToWorldSpace(Vector3.new(moveDirection.X, 0, moveDirection.Z).Unit * config.flySpeedValue)
+                    local camCFrame = camera.CFrame
+                    local direction = (camCFrame.RightVector * moveDirection.X) + (camCFrame.LookVector * -moveDirection.Z)
+                    if direction.Magnitude > 0 then
+                        flyBodyVelocity.Velocity = direction.Unit * config.flySpeedValue
+                    end
                 else
-                    flyBodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+                    flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
                 end
                 flyBodyGyro.CFrame = camera.CFrame
             end
@@ -275,10 +273,12 @@ local function setFlying(state)
         if flyConnection then flyConnection:Disconnect() flyConnection = nil end
         if flyBodyVelocity then flyBodyVelocity:Destroy() flyBodyVelocity = nil end
         if flyBodyGyro then flyBodyGyro:Destroy() flyBodyGyro = nil end
-        if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then Player.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false end
+        if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then 
+            Player.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false 
+        end
     end
 end
--- PART 4: AIMBOT, ESP, CUSTOM TEXTURE AND CONFIGURATION AUTO-LOAD
+-- PART 4: AIMBOT, ESP, TEXTURE LOADING & CONFIG AUTO-LOAD MEMORY
 RunService.Heartbeat:Connect(function()
     if config.flingEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local root = Player.Character.HumanoidRootPart
@@ -405,4 +405,4 @@ MainFrame.InputChanged:Connect(function(input) if input.UserInputType == Enum.Us
 UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then local delta = input.Position - dragStart MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
 
 refreshVisuals()
-print("Menu V9 Horizontal Completed!")
+print("Menu V9 Completely Loaded!")
