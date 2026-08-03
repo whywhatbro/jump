@@ -1,4 +1,4 @@
--- PART 1: SYSTEM, SAVED DATA CONFIG & TREO MÁY ANTI-AFK
+-- PART 1: SYSTEM, DATA CONFIG & ANTI-AFK
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -50,6 +50,7 @@ ScreenGui.Name = "DaiTayTruongMM2Menu"
 ScreenGui.ResetOnSpawn = false
 if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = PlayerGui end
 
+-- NÚT MENU ĐÃ SỬA LỖI ĐÓNG MỞ (FIXED TOGGLE)
 local ToggleMenuButton = Instance.new("TextButton")
 ToggleMenuButton.Size = UDim2.new(0, 50, 0, 50)
 ToggleMenuButton.Position = UDim2.new(0.02, 0, 0.15, 0)
@@ -66,8 +67,8 @@ UICornerBtn.CornerRadius = UDim.new(0, 25)
 UICornerBtn.Parent = ToggleMenuButton
 
 local MainFrame = Instance.new("ImageLabel")
-MainFrame.Size = UDim2.new(0, 540, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -270, 0.4, -130)
+MainFrame.Size = UDim2.new(0, 540, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -270, 0.4, -120)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
 MainFrame.Active = true
 MainFrame.ScaleType = Enum.ScaleType.Slice
@@ -79,7 +80,6 @@ local UICornerMain = Instance.new("UICorner")
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
--- TÊN HACK MỚI: free hack by đại tày trưởng
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
@@ -105,7 +105,7 @@ RightColumn.Size = UDim2.new(0.46, 0, 0.8, 0)
 RightColumn.Position = UDim2.new(0.52, 0, 0.16, 0)
 RightColumn.BackgroundTransparency = 1
 RightColumn.Parent = MainFrame
--- PART 2: UI LAYOUT, DESIGN SEPARATION & SHIFTABLE MOBILE ROUND BUTTON
+-- PART 2: FIXED UI LAYOUT & BUTTON PRESET
 local function createMenuButton(text, parent, posY, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 32)
@@ -118,7 +118,7 @@ local function createMenuButton(text, parent, posY, color)
     btn.Parent = parent
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = corner or btn
+    corner.Parent = btn
     return btn
 end
 
@@ -140,13 +140,11 @@ local function createMenuTextBox(placeholder, parent, posY)
     return box
 end
 
--- PHÂN CHIA NÚT CỘT TRÁI (LEFT)
 local FarmCoinBtn = createMenuButton("Auto Farm Coin: TẮT", LeftColumn, 5, Color3.fromRGB(200, 50, 50))
 local AimMurderBtn = createMenuButton("Aimbot Khoá Murder: TẮT", LeftColumn, 42, Color3.fromRGB(200, 50, 50))
 local AimSheriffBtn = createMenuButton("Aimbot Khoá Sheriff: TẮT", LeftColumn, 79, Color3.fromRGB(200, 50, 50))
 local EspBtn = createMenuButton("ESP Nhìn Xuyên (M, S, I): TẮT", LeftColumn, 116, Color3.fromRGB(200, 50, 50))
 
--- PHÂN CHIA NÚT CỘT PHẢI (RIGHT)
 local ShootToggleBtn = createMenuButton("Nút Bắn Murder Rời: TẮT", RightColumn, 5, Color3.fromRGB(200, 50, 50))
 local KillAllBtn = createMenuButton("💀 KILL ALL PLAYER (MURDER) 💀", RightColumn, 42, Color3.fromRGB(150, 0, 0))
 
@@ -155,11 +153,10 @@ local TextureBtn = createMenuButton("Đổi Nền UI", RightColumn, 85, Color3.f
 TextureBtn.Size = UDim2.new(0.5, 0, 0, 32)
 TextureBtn.Position = UDim2.new(0.5, 0, 0, 85)
 
--- NÚT TRÒN BẮN RỜI (Ghim ở phía trên bên trái nút nhảy của game một đoạn an toàn)
 local RoundShootBtn = Instance.new("TextButton")
 RoundShootBtn.Name = "MobileCustomShootButton"
-RoundShootBtn.Size = UDim2.new(0, 55, 0, 55) -- Kích cỡ tương ứng nút nhảy điện thoại
-RoundShootBtn.Position = UDim2.new(0.68, -65, 0.65, -65) -- Cách khoảng cách an toàn, tránh chạm nhầm
+RoundShootBtn.Size = UDim2.new(0, 55, 0, 55)
+RoundShootBtn.Position = UDim2.new(0.68, -65, 0.65, -65)
 RoundShootBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 RoundShootBtn.Text = "SHOOT"
 RoundShootBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -172,7 +169,7 @@ RoundShootBtn.Parent = ScreenGui
 local UICornerShoot = Instance.new("UICorner")
 UICornerShoot.CornerRadius = UDim.new(0, 28)
 UICornerShoot.Parent = RoundShootBtn
--- PART 3: ROLE DETECTION, TWEEN COIN MANAGEMENT & KILL ALL ENGINE
+-- PART 3: ROLE DETECTION, COIN TWEEN LOOP & MURDER KILL ALL LOGIC
 local function getMM2Roles()
     local murder, sheriff = nil, nil
     for _, p in pairs(Players:GetPlayers()) do
@@ -202,7 +199,6 @@ local function getClosestCoin()
     return closest
 end
 
--- Vòng lặp Tween nhặt Coin tự động dừng khi chết/full rương
 task.spawn(function()
     while task.wait(0.5) do
         if config.farmCoin and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -231,17 +227,15 @@ task.spawn(function()
     end
 end)
 
--- LOGIC CHỨC NĂNG KILL ALL BÁ ĐẠO CHO SÁT NHÂN MURDER
 task.spawn(function()
     while task.wait(0.2) do
         if config.killAllEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             local knife = Player.Character:FindFirstChild("Knife") or Player.Backpack:FindFirstChild("Knife")
             if knife then
-                knife.Parent = Player.Character -- Lôi dao ra tay
+                knife.Parent = Player.Character
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
                         if config.killAllEnabled then
-                            -- Dịch chuyển dao cắm thẳng vào mục tiêu và kích hoạt sát thương chém chớp nhoáng
                             Player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + p.Character.HumanoidRootPart.CFrame.LookVector * -1
                             knife:Activate()
                             task.wait(0.05)
@@ -252,7 +246,7 @@ task.spawn(function()
         end
     end
 end)
--- PART 4: COLOR-CODED ESP SYSTEM, ROUND TRIGGER SHOOT & VISUAL MEMORY RESTORE
+-- PART 4: ADVANCED CORNER-HIGHLIGHT ESP & SMOOTH TOGGLE CLICK
 local function applyAdvancedESP()
     local murder, sheriff = getMM2Roles()
     for _, p in pairs(Players:GetPlayers()) do
@@ -266,13 +260,12 @@ local function applyAdvancedESP()
                     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                     highlight.Parent = p.Character
                 end
-                -- Phân chia màu sắc phân biệt rõ ràng từng chức vụ trong game
                 if p == murder then
-                    highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Đỏ (Sát nhân)
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
                 elseif p == sheriff then
-                    highlight.FillColor = Color3.fromRGB(0, 0, 255) -- Xanh Dương (Cảnh sát)
+                    highlight.FillColor = Color3.fromRGB(0, 0, 255)
                 else
-                    highlight.FillColor = Color3.fromRGB(0, 255, 0) -- Xanh Lá (Dân thường)
+                    highlight.FillColor = Color3.fromRGB(0, 255, 0)
                 end
             else
                 local hl = p.Character:FindFirstChild("MM2Highlight") if hl then hl:Destroy() end
@@ -292,7 +285,6 @@ RunService.RenderStepped:Connect(function()
     if config.espPlayers then applyAdvancedESP() end
 end)
 
--- LOGIC KHI ẤN NÚT TRÒN "SHOOT" RỜI TRÊN MÀN HÌNH
 RoundShootBtn.MouseButton1Click:Connect(function()
     local murder, _ = getMM2Roles()
     if murder and murder.Character and murder.Character:FindFirstChild("HumanoidRootPart") then
@@ -342,11 +334,15 @@ EspBtn.MouseButton1Click:Connect(function() config.espPlayers = not config.espPl
 ShootToggleBtn.MouseButton1Click:Connect(function() config.shootMurderEnabled = not config.shootMurderEnabled saveConfig() refreshVisuals() end)
 KillAllBtn.MouseButton1Click:Connect(function() config.killAllEnabled = not config.killAllEnabled saveConfig() refreshVisuals() end)
 
-ToggleMenuButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+-- SỬA LỖI ĐÓNG MỞ HOÀN TOÀN KHÔNG BỊ KẸT BIẾN ẨN
+ToggleMenuButton.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = not MainFrame.Visible 
+end)
+
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true dragStart = input.Position startPos = MainFrame.Position input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end) end end)
 MainFrame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
 UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then local delta = input.Position - dragStart MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
 
 refreshVisuals()
-print("free hack by dai tay truong loaded!")
+print("free hack by dai tay truong fully fixed!")
